@@ -1,45 +1,65 @@
 # VoiceHire
 
-> Voice AI agent platform for staffing & temp agencies.
-> Automates candidate screening calls, scheduling, and ATS sync.
+Voice AI platform for staffing agencies — automates candidate screening calls with ATS integration.
 
-## Concept
+## What It Does
 
-Staffing agencies spend 60-70% of recruiter time on repetitive phone screening:
-"Are you available Tuesday? Do you have forklift certification? Can you pass a drug test?"
+VoiceHire automates the repetitive phone screening that staffing agencies perform daily. AI-powered voice calls handle structured candidate screening (availability, certifications, basic qualification checks) and sync results back to the agency's ATS.
 
-VoiceHire handles those calls autonomously — 24/7, at scale, integrated with their ATS.
+## Tech Stack
 
-**Starting vertical:** Warehouse / logistics temp staffing (highest call volume, most repetitive)
-**Expansion path:** Healthcare staffing → light industrial → hospitality → analytics layer (NL2SQL)
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python 3.12, FastAPI, SQLAlchemy 2.x async, PostgreSQL 16, Redis 7 |
+| Frontend | Next.js 15, TypeScript, Tailwind CSS, shadcn/ui, Zustand |
+| Voice | Retell.ai |
+| Evaluation | Anthropic Claude |
+| Billing | Stripe |
+| Deployment | Fly.io (backend), Vercel (frontend) |
 
-## Target Customer
+## Development
 
-Mid-market staffing agencies ($5M–$100M revenue, 5–50 recruiters).
-~5,000–10,000 agencies in this range in the US.
+```bash
+# Clone
+git clone https://github.com/alexdoroshevich/VoiceHire.git
+cd VoiceHire
 
-**Willingness to pay:** $1,000–$3,000/month
-**Alternative cost:** $3,500–$5,000/month per human recruiter
+# Backend
+cd backend
+cp .env.example .env
+pip install -e ".[dev]"
 
-## Stack (planned)
+# Infrastructure
+docker compose up -d postgres redis
 
-- **Voice infrastructure:** Vapi.ai or Bland.ai
-- **Backend:** FastAPI + PostgreSQL + Redis
-- **Frontend:** Next.js
-- **ATS integration:** Bullhorn (dominant in staffing)
-- **Deployment:** Fly.io
+# Run
+uvicorn app.main:app --reload
+```
 
-## Status
+See [CONTRIBUTING.md](CONTRIBUTING.md) for code standards and PR process.
 
-- [ ] Market research complete (April 2026)
-- [ ] MVP build
-- [ ] Beta customers (target: 3 agencies)
-- [ ] First paid customer
-- [ ] $10k MRR
-- [ ] $30k MRR (acquisition-ready threshold)
+## Project Structure
 
-## Docs
+```
+VoiceHire/
+├── backend/           # FastAPI application
+│   ├── app/
+│   │   ├── api/v1/    # Route handlers
+│   │   ├── models/    # SQLAlchemy models
+│   │   ├── schemas/   # Pydantic request/response
+│   │   └── services/  # Business logic
+│   ├── alembic/       # Database migrations
+│   └── tests/         # pytest test suite
+├── frontend/          # Next.js application (planned)
+├── .claude/           # Agent specs, rules, skills
+├── .github/           # CI/CD workflows
+└── docker-compose.yml
+```
 
-- [Market Research](docs/market-research.md)
-- [Build-to-Sell Strategy](docs/build-to-sell-strategy.md)
-- [Competition Map](docs/competition.md)
+## Security
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting.
+
+## License
+
+Proprietary. All rights reserved.

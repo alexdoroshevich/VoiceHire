@@ -1,0 +1,80 @@
+# ── Internal documents — NEVER publish ──────────────────────────────────────
+# Market research, business strategy, pricing analysis, acquisition plans
+docs/market-research.md
+docs/deep-analysis-round2.md
+docs/build-to-sell-strategy.md
+docs/research/
+docs/business-strategy*.md
+docs/pricing*.md
+docs/acquisition*.md
+
+# Internal development docs (stay local only)
+CLAUDE.md
+HANDOFF.md
+CLAUDE_CODE_PROMPTS.md
+SONNET_TASKS.md
+TOKEN_OPTIMIZATION.md
+WORKFLOW.md
+CHANGELOG.md
+
+# ── Secrets — NEVER commit real keys ───────────────────────────────────────
+.env
+*.env.local
+.env.production
+.env.staging
+*.pem
+*.key
+credentials.json
+
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Node / Next.js ─────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# ── Docker ─────────────────────────────────────────────────────────────────
+postgres_data/
+redis_data/
+*.dockerignore
+
+# ── IDE ────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+
+# ── OS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs ───────────────────────────────────────────────────────────────────
+*.log
+gunicorn.pid
+*.ctl
+
+# ── Claude Code — local/ephemeral only ─────────────────────────────────────
+.claude/sessions/
+.claude/settings.local.json
+.claude/repomix-output.xml
