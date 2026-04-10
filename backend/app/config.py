@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # ── Application ────────────────────────────────────────────────────────────
     app_env: str = "development"
     debug: bool = False
-    secret_key: str = "changeme-in-production"
+    secret_key: str = "changeme-in-production"  # nosec B105 -- rejected in prod by model_validator below
 
     # ── Database ───────────────────────────────────────────────────────────────
     database_url: str = "postgresql+asyncpg://voicehire:voicehire@localhost:5432/voicehire"
