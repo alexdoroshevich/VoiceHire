@@ -1,8 +1,14 @@
 name: CodeQL security analysis
 
-# CodeQL v4 — scans Python + TypeScript for injection paths, auth bypass,
+# CodeQL scans Python + TypeScript for injection paths, auth bypass,
 # tainted data flows. Results go to GitHub Security tab (SARIF upload).
-# Also scans .github/workflows/ for CI/CD security issues.
+#
+# NOTE: SARIF upload requires GitHub Advanced Security (Enterprise) or
+# a public repo. On private repos without GHAS, this workflow will fail
+# on the upload step. It's kept here so it activates automatically if
+# the repo becomes public or GHAS is enabled.
+#
+# Not included in pr-gate.yml — informational only until GHAS is available.
 
 on:
   push:
@@ -10,7 +16,6 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Weekly full scan — Monday 03:00 UTC
     - cron: "0 3 * * 1"
 
 jobs:
