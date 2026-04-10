@@ -3,17 +3,15 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from jose import jwt
+import jwt
 
 from app.config import settings
 
 
 def create_access_token(user_id: uuid.UUID, agency_id: uuid.UUID | None = None) -> str:
     """Create a short-lived access token with user_id and agency_id claims."""
-    expire = datetime.now(UTC) + timedelta(
-        minutes=settings.jwt_access_token_expire_minutes
-    )
-    payload = {
+    expire = datetime.now(UTC) + timedelta(minutes=settings.jwt_access_token_expire_minutes)
+    payload: dict = {
         "sub": str(user_id),
         "type": "access",
         "exp": expire,
@@ -25,10 +23,8 @@ def create_access_token(user_id: uuid.UUID, agency_id: uuid.UUID | None = None) 
 
 def create_refresh_token(user_id: uuid.UUID) -> str:
     """Create a long-lived refresh token."""
-    expire = datetime.now(UTC) + timedelta(
-        days=settings.jwt_refresh_token_expire_days
-    )
-    payload = {
+    expire = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
+    payload: dict = {
         "sub": str(user_id),
         "type": "refresh",
         "exp": expire,
@@ -37,5 +33,5 @@ def create_refresh_token(user_id: uuid.UUID) -> str:
 
 
 def decode_token(token: str) -> dict:
-    """Decode and verify a JWT token. Raises JWTError on failure."""
+    """Decode and verify a JWT token. Raises jwt.PyJWTError on failure."""
     return jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])

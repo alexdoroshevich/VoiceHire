@@ -31,11 +31,7 @@ class Subscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     included_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
     used_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     overage_rate_cents: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
-    current_period_start: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    current_period_end: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    current_period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    current_period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     agency: Mapped[Agency] = relationship(back_populates="subscription")

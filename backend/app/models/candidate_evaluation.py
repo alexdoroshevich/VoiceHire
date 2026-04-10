@@ -49,9 +49,7 @@ class CandidateEvaluation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     evaluation_model: Mapped[str] = mapped_column(String(50), nullable=False)
     evaluation_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     synced_to_ats: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    synced_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     call: Mapped[Call] = relationship(back_populates="evaluation")
     candidate: Mapped[Candidate] = relationship(back_populates="evaluations")

@@ -17,9 +17,7 @@ class Settings(BaseSettings):
     secret_key: str = "changeme-in-production"
 
     # ── Database ───────────────────────────────────────────────────────────────
-    database_url: str = (
-        "postgresql+asyncpg://voicehire:voicehire@localhost:5432/voicehire"
-    )
+    database_url: str = "postgresql+asyncpg://voicehire:voicehire@localhost:5432/voicehire"
 
     # ── Redis ──────────────────────────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379"

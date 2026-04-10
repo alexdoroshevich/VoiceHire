@@ -70,19 +70,13 @@ class Call(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
     recording_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     cost_cents: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    started_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    ended_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     agency: Mapped[Agency] = relationship(back_populates="calls")
     candidate: Mapped[Candidate] = relationship(back_populates="calls")
     screening_flow: Mapped[ScreeningFlow] = relationship()
-    transcript: Mapped[CallTranscript | None] = relationship(
-        back_populates="call", uselist=False
-    )
+    transcript: Mapped[CallTranscript | None] = relationship(back_populates="call", uselist=False)
     evaluation: Mapped[CandidateEvaluation | None] = relationship(
         back_populates="call", uselist=False
     )

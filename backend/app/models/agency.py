@@ -31,9 +31,7 @@ class Agency(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Relationships
-    users: Mapped[list[User]] = relationship(
-        back_populates="agency", cascade="all, delete-orphan"
-    )
+    users: Mapped[list[User]] = relationship(back_populates="agency", cascade="all, delete-orphan")
     screening_flows: Mapped[list[ScreeningFlow]] = relationship(back_populates="agency")
     calls: Mapped[list[Call]] = relationship(back_populates="agency")
     candidates: Mapped[list[Candidate]] = relationship(back_populates="agency")

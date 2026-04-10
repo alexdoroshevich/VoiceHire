@@ -1,9 +1,11 @@
 """Auth routes -- register, login, refresh, me."""
 
 import re
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+import jwt
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
@@ -154,17 +156,12 @@ async def refresh(
             detail="No refresh token",
         )
 
-    from jose import JWTError
-
     try:
         payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=401, detail="Invalid token type")
-
-        import uuid
-
         user_id = uuid.UUID(payload["sub"])
-    except (JWTError, ValueError, KeyError):
+    except (jwt.PyJWTError, ValueError, KeyError):
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
     result = await db.execute(select(User).where(User.id == user_id))

@@ -35,12 +35,12 @@ POST /api/v1/calls (initiate)
     → PromptBuilder.build_system_prompt()
     → RetellClient.create_call() (Retell.ai HTTP API)
     → Create Call record (status: queued → ringing → in_progress)
-  
+
 Retell.ai manages the actual phone call
   → Greeting, AI disclosure, consent check
   → Questions asked in order per flow
   → Knockout detection during call
-  
+
 POST /api/v1/webhooks/retell (call_ended)
   → Verify webhook signature
   → Save transcript to call_transcripts

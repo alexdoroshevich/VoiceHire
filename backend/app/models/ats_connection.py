@@ -36,9 +36,7 @@ class ATSConnection(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     credentials: Mapped[dict] = mapped_column(JSONB, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    last_sync_at: Mapped[str | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_sync_at: Mapped[str | None] = mapped_column(DateTime(timezone=True), nullable=True)
     sync_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
     sync_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
