@@ -1,0 +1,198 @@
+{
+  "model": "sonnet",
+  "effortLevel": "high",
+  "autoMemoryEnabled": true,
+  "disableSkillShellExecution": true,
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git show:*)",
+      "Bash(git fetch:*)",
+      "Bash(pytest:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npx tsc --noEmit:*)",
+      "Bash(ruff check:*)",
+      "Bash(ruff format:*)",
+      "Bash(pip list:*)",
+      "Bash(pip show:*)",
+      "Bash(npm list:*)",
+      "Bash(alembic history:*)",
+      "Bash(alembic current:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker compose ps:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh issue:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git checkout -- .:*)",
+      "Bash(drop database:*)",
+      "Bash(DROP DATABASE:*)",
+      "Bash(DROP TABLE:*)",
+      "Bash(drop table:*)",
+      "Bash(TRUNCATE:*)",
+      "Bash(truncate:*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat \"$CLAUDE_PROJECT_DIR/.claude/rules/architecture.md\" \"$CLAUDE_PROJECT_DIR/.claude/rules/code-quality.md\" \"$CLAUDE_PROJECT_DIR/.claude/rules/security.md\" 2>/dev/null | head -200 || true",
+            "timeout": 5,
+            "statusMessage": "Loading project context..."
+          },
+          {
+            "type": "command",
+            "command": "SESSION_FILE=\"$CLAUDE_PROJECT_DIR/.claude/sessions/last-session.json\"; [ -f \"$SESSION_FILE\" ] && F=\"$SESSION_FILE\" python3 -c \"import json,os,time; f=os.environ['F']; d=json.load(open(f)); age=int((time.time()-os.path.getmtime(f))/60); b=d.get('branch','?'); uc=d.get('uncommitted_count',0); rc=d.get('recent_commits',''); parts=['branch='+b]; uc and parts.append(str(uc)+' uncommitted file(s)'); rc and parts.append('commits: '+rc.replace('|',', ')); print(json.dumps({'systemMessage':'Last session '+str(age)+'min ago — '+', '.join(parts)+'.'}))\" 2>/dev/null || true",
+            "timeout": 5,
+            "statusMessage": "Injecting last-session context..."
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p \"$CLAUDE_PROJECT_DIR/.claude/sessions\" && cd \"$CLAUDE_PROJECT_DIR\" && BRANCH=$(git branch --show-current 2>/dev/null || echo unknown) && DIRTY_COUNT=$(git status --short 2>/dev/null | wc -l | tr -d ' ' || echo 0) && DIRTY_FILES=$(git status --short 2>/dev/null | awk '{print $2}' | head -20 | tr '\\n' ',' | sed 's/,$//') && RECENT=$(git log --oneline -3 2>/dev/null | tr '\\n' '|' | sed 's/|$//') && OPEN_PRS=$(gh pr list --state open --json number,title --jq '[.[0:5][] | \"#\" + (.number|tostring) + \": \" + .title] | join(\", \")' 2>/dev/null || echo '') && BRANCH=\"$BRANCH\" DIRTY=\"$DIRTY_COUNT\" FILES=\"$DIRTY_FILES\" RECENT=\"$RECENT\" PRS=\"$OPEN_PRS\" ENDED=\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" python3 -c \"import json,os; d={'ended_at':os.environ.get('ENDED',''),'branch':os.environ.get('BRANCH',''),'uncommitted_count':int(os.environ.get('DIRTY','0') or 0),'changed_files':[x for x in os.environ.get('FILES','').split(',') if x],'recent_commits':os.environ.get('RECENT',''),'open_prs':os.environ.get('PRS','')}; print(json.dumps(d))\" > \"$CLAUDE_PROJECT_DIR/.claude/sessions/last-session.json\" 2>/dev/null || true",
+            "timeout": 15,
+            "statusMessage": "Saving session state..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && git status --short 2>/dev/null | { read -r line; if [ -n \"$line\" ]; then echo '{\"systemMessage\": \"Warning: uncommitted changes exist. Consider committing before ending the session.\"}'; fi; } || true",
+            "timeout": 5,
+            "statusMessage": "Checking for uncommitted changes..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); file=$(echo \"$input\" | python3 -c \"import sys,json; d=json.loads(sys.stdin.read()); print(d.get('tool_input',{}).get('file_path',''))\" 2>/dev/null || echo ''); case \"$file\" in *ruff.toml|*tsconfig.json|*.eslintrc*|*tailwind.config.*) echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Config protection: edits to quality gate files require explicit user approval. State what you want to change and why.\"}}' ;; *pyproject.toml) changed=$(echo \"$input\" | python3 -c \"import sys,json; d=json.loads(sys.stdin.read()); ti=d.get('tool_input',{}); print(ti.get('old_string','') + ti.get('new_string','') + ti.get('content',''))\" 2>/dev/null || echo ''); if echo \"$changed\" | grep -qE '\\[tool\\.(ruff|mypy|pylint)'; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Config protection: edits to [tool.ruff] or [tool.mypy] in pyproject.toml require explicit user approval.\"}}'; fi ;; esac || true",
+            "timeout": 5,
+            "statusMessage": "Checking config protection..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "if": "Bash(git push *)",
+            "type": "command",
+            "command": "input=$(cat); cmd=$(echo \"$input\" | python3 -c \"import sys,json; d=json.loads(sys.stdin.read()); print(d.get('tool_input',{}).get('command',''))\" 2>/dev/null || echo ''); if echo \"$cmd\" | grep -qE 'origin\\s+(main|master)\\b|(main|master)\\s*$'; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Direct push to main/master is blocked. Create a feature branch and open a PR instead.\"}}'; fi || true",
+            "timeout": 5,
+            "statusMessage": "Checking branch guard..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // .tool_response.filePath // empty' | { read -r f; case \"$f\" in *.py) cd \"$CLAUDE_PROJECT_DIR/backend\" 2>/dev/null && ruff check --fix \"$f\" 2>/dev/null && ruff format \"$f\" 2>/dev/null ;; *.ts|*.tsx) cd \"$CLAUDE_PROJECT_DIR/frontend\" 2>/dev/null && npx eslint --fix \"$f\" 2>/dev/null ;; esac; } || true",
+            "timeout": 15,
+            "statusMessage": "Auto-formatting changed file..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/scripts/auto-pr.sh\" 2>/dev/null || true",
+            "timeout": 30,
+            "statusMessage": "Checking if PR needs to be created..."
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "COUNTER_FILE=\"/tmp/claude_tool_count_${CLAUDE_SESSION_ID:-$$}\"; COUNT=$(cat \"$COUNTER_FILE\" 2>/dev/null || echo 0); COUNT=$((COUNT + 1)); echo \"$COUNT\" > \"$COUNTER_FILE\"; if [ $((COUNT % 40)) -eq 0 ]; then echo \"{\\\"systemMessage\\\": \\\"Tool call #$COUNT reached. Consider running /compact now to preserve context quality.\\\"}\"; fi || true",
+            "timeout": 3,
+            "statusMessage": "Tracking tool usage..."
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "BRANCH=$(cd \"$CLAUDE_PROJECT_DIR\" && git branch --show-current 2>/dev/null || echo 'unknown'); COUNTER_FILE=\"/tmp/claude_tool_count_${CLAUDE_SESSION_ID:-$$}\"; COUNT=$(cat \"$COUNTER_FILE\" 2>/dev/null || echo '?'); echo \"{\\\"systemMessage\\\": \\\"Compacting at tool call ~$COUNT on branch $BRANCH. After compaction: agency_id on every query, CAST(:x AS jsonb), structlog only, compliance before every call.\\\"}\"",
+            "timeout": 5,
+            "statusMessage": "Preparing compaction context..."
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"Context compacted. Critical reminders: 1) JSONB mutation: always reassign whole dict. 2) asyncpg: CAST(:param AS jsonb) never ::jsonb. 3) agency_id filter on every query. 4) structlog only, never print(). 5) AI disclosure + consent before every call. 6) ATS credentials Fernet-encrypted. 7) Never log PII or transcripts.\"}'",
+            "timeout": 5,
+            "statusMessage": "Re-injecting critical rules after compaction..."
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "BRANCH=$(cd \"$CLAUDE_PROJECT_DIR\" && git branch --show-current 2>/dev/null || echo 'unknown'); echo \"{\\\"systemMessage\\\": \\\"Subagent context — VoiceHire: multi-tenant voice AI SaaS for staffing agencies. FastAPI+SQLAlchemy backend, Next.js+TypeScript frontend. Retell.ai for voice, ATSProvider ABC for ATS. Rules: agency_id on every query, CAST(:x AS jsonb), structlog not print(), compliance (AI disclosure + consent). Current branch: $BRANCH.\\\"}\"",
+            "timeout": 5,
+            "statusMessage": "Injecting project context into subagent..."
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && git status --short 2>/dev/null | { read -r line; if [ -n \"$line\" ]; then echo '{\"systemMessage\": \"Task complete — uncommitted changes exist. Commit them before moving to the next task.\"}'; fi; } || true",
+            "timeout": 5,
+            "statusMessage": "Checking for uncommitted changes after task..."
+          }
+        ]
+      }
+    ]
+  }
+}
