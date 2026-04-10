@@ -30,7 +30,7 @@ These are absolute rules. Violating any of them is a P0 incident.
 - Any candidate PII: names, phone numbers, emails, interview answers
 - Call recordings, transcripts, evaluation scores
 - Agency-specific settings or billing data
-- Internal pricing, cost calculations, margin data
+- Internal business strategy, pricing, cost calculations, margin data
 
 ### What Can Be Shared Publicly
 - Project structure and architecture decisions (ADRs)
