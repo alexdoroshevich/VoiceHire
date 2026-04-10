@@ -1,3 +1,10 @@
+---
+paths:
+  - "backend/app/models/**"
+  - "backend/app/database.py"
+  - "backend/alembic/**"
+---
+
 # Database Conventions
 
 ## Stack

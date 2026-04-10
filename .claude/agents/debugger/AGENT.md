@@ -1,17 +1,18 @@
 ---
 name: debugger
-model: claude-opus-4-6
 description: >
-  Systematic 4-phase debugger. Use when a bug has resisted 2+ quick fix attempts
-  or when the root cause is genuinely unclear. Returns a diagnosis report with a
-  single targeted fix — not a shotgun of guesses.
-tools:
-  - Read
-  - Glob
-  - Grep
-  - Bash
-  - Edit
-  - Write
+  Systematic 4-phase debugger for VoiceHire. Use when a bug has resisted 2+
+  quick fix attempts or when the root cause is genuinely unclear. Returns a
+  diagnosis report with a single targeted fix — not a shotgun of guesses.
+  Knows multi-tenant pitfalls (agency_id leaks), JSONB mutation bugs,
+  asyncpg cast issues, and webhook processing failures.
+model: claude-opus-4-6
+tools: Read, Write, Edit, Bash, Grep, Glob
+maxTurns: 30
+effort: high
+memory: project
+permissionMode: default
+isolation: none
 ---
 
 # Debugger Agent

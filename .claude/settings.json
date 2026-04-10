@@ -50,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"$CLAUDE_PROJECT_DIR/.claude/rules/architecture.md\" \"$CLAUDE_PROJECT_DIR/.claude/rules/code-quality.md\" \"$CLAUDE_PROJECT_DIR/.claude/rules/security.md\" 2>/dev/null | head -200 || true",
+            "command": "cat \"$CLAUDE_PROJECT_DIR/.claude/rules/architecture.md\" \"$CLAUDE_PROJECT_DIR/.claude/rules/code-quality.md\" \"$CLAUDE_PROJECT_DIR/.claude/rules/security.md\" \"$CLAUDE_PROJECT_DIR/.claude/rules/database.md\" \"$CLAUDE_PROJECT_DIR/.claude/rules/multi-tenancy.md\" 2>/dev/null | head -300 || true",
             "timeout": 5,
             "statusMessage": "Loading project context..."
           },

@@ -41,6 +41,14 @@ paths:
 - Evaluation saved to `candidate_evaluations` table
 - Results include: overall_score, per-question scores, summary, pass/fail
 
+## Batch Calling
+- POST /api/v1/calls/batch initiates calls for multiple candidates
+- Batch creates individual Call records, each queued independently
+- Concurrent call limit per agency (configurable, default 5 simultaneous)
+- Rate limiting: max N calls per minute per agency to avoid Retell.ai throttling
+- Retry logic for failed calls: no_answer → retry up to 2x with configurable delay
+- Voicemail detection: if voicemail, mark call as `voicemail` status, do not retry
+
 ## Compliance (TCPA, state laws, EU AI Act)
 - AI disclosure MUST be played at start of every call
 - Consent MUST be obtained and logged before proceeding
@@ -48,8 +56,25 @@ paths:
 - Candidate can terminate call at any time — logged as compliance event
 - Recording consent separate from AI screening consent
 
+### Compliance Event Types (ComplianceEventType enum)
+- `ai_disclosure_played` — AI nature disclosed to candidate
+- `consent_given` — candidate consented to screening
+- `consent_refused` — candidate refused, call ends gracefully
+- `recording_started` — call recording began
+- `recording_stopped` — call recording ended
+- `call_terminated_by_candidate` — candidate hung up or requested stop
+- `data_deletion_requested` — candidate requested data deletion (GDPR)
+- `tcpa_consent_verified` — prior TCPA consent confirmed before outbound call
+
+### Applicable Laws
+- TCPA: prior express consent required for automated outbound calls
+- NYC Local Law 144: AI bias audit + notice to candidates (10 business days before)
+- Illinois HB 3773: consent required before AI analyzes video/audio interviews
+- EU AI Act: high-risk AI system classification for hiring, requires conformity assessment
+
 ## Never Do
 - Never store call audio on our servers — Retell.ai manages recordings
 - Never log transcript content — only call_id, duration, cost
 - Never call a candidate without consent being logged
 - Never skip AI disclosure — it's a legal requirement
+- Never exceed agency concurrent call limit without explicit override

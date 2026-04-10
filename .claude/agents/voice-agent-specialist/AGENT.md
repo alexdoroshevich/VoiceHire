@@ -54,10 +54,33 @@ POST /api/v1/webhooks/retell (call_ended)
 ## Retell.ai Integration Patterns
 
 - HTTP client: `RetellClient` wraps httpx for Retell.ai REST API
-- Agent config: Retell agents are created per screening flow variant
-- System prompt: Built dynamically from ScreeningFlow + Questions
-- Webhook: POST from Retell.ai on call events (ringing, connected, ended)
-- Cost: $0.13/min tracked in `calls.cost_cents`
+- Base URL: `https://api.retellai.com`
+- Auth: `Authorization: Bearer <RETELL_API_KEY>` header
+
+### Key Retell.ai API Endpoints
+- `POST /v2/create-phone-call` — initiate outbound call (requires agent_id, to_number)
+- `POST /v2/create-agent` — create/update voice agent with system prompt
+- `GET /v2/get-call/{call_id}` — retrieve call details + transcript
+- `GET /v2/list-calls` — list calls with filters
+- `POST /v2/update-agent/{agent_id}` — update agent config
+
+### Agent Configuration
+- One Retell agent created per screening flow variant (not per call)
+- `retell_llm_dynamic_variables` used to inject: candidate name, agency name, job title, flow-specific context
+- System prompt built by PromptBuilder from ScreeningFlow + Questions
+- Voice config (voice_id, language, speed) stored in `screening_flows.voice_config` JSONB
+
+### Webhook Payload Structure
+Retell.ai sends POST to our webhook URL on call events:
+- `call_started` — call connected, agent speaking
+- `call_ended` — call completed, includes: transcript, call_duration, cost
+- `call_analyzed` — post-call analysis complete (if Retell analysis enabled)
+- Webhook signature in `x-retell-signature` header — MUST verify before processing
+
+### Cost Tracking
+- Retell.ai reports call cost in `call_ended` webhook payload
+- Store in `calls.cost_cents` (integer cents, not float dollars)
+- Agency usage tracked in `subscriptions.used_minutes`
 
 ## Compliance — NON-NEGOTIABLE
 
@@ -81,9 +104,21 @@ Laws to comply with:
 - Overall score = weighted average of question scores
 - Results: score, pass/fail, per-question breakdown, summary
 
+## Batch Calling
+
+- POST /api/v1/calls/batch initiates calls for a list of candidate IDs
+- Each call queued independently with its own Call record
+- Concurrent limit per agency (default 5 simultaneous calls)
+- Rate limiting per agency to avoid Retell.ai API throttling
+- Retry: no_answer/busy → retry up to 2x with configurable delay
+- Voicemail detection: mark as `voicemail`, no retry
+
 ## Gotchas
 
-- **Retell.ai agent reuse**: Don't create a new agent per call — reuse agents per flow variant
-- **Webhook idempotency**: Same event may fire twice. Check webhook_events before processing.
-- **Cost tracking**: Retell.ai reports cost in the call_ended webhook. Save to `calls.cost_cents`.
-- **Consent refusal**: If candidate refuses consent, end call gracefully and log to compliance.
+- **Retell.ai agent reuse**: Don't create a new agent per call — reuse agents per flow variant. Cache agent_id by flow+voice_config hash.
+- **Webhook idempotency**: Same event may fire twice. Check `webhook_events` for duplicate `retell_call_id + event_type` before processing.
+- **Cost tracking**: Retell.ai reports cost in the `call_ended` webhook. Save to `calls.cost_cents` as integer cents.
+- **Consent refusal**: If candidate refuses consent, end call gracefully and log `consent_refused` to `compliance_logs`.
+- **Dynamic variables**: Use `retell_llm_dynamic_variables` to inject candidate context — never hardcode names in system prompts.
+- **Webhook signature**: Verify `x-retell-signature` header using HMAC. Reject unverified payloads with 401.
+- **Transcript format**: Retell returns transcript as array of `{role, content, words}` objects. Map to our `call_transcripts.turns` JSONB format.
