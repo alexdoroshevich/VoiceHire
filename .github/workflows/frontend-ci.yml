@@ -5,17 +5,18 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
-      - ".github/workflows/frontend-ci.yml"
   pull_request:
     branches: [main]
     paths:
       - "frontend/**"
-      - ".github/workflows/frontend-ci.yml"
 
 jobs:
   lint-typecheck:
     name: Lint + Type Check
     runs-on: ubuntu-latest
+
+    # Skip if frontend doesn't exist yet
+    if: hashFiles('frontend/package.json') != ''
 
     defaults:
       run:
