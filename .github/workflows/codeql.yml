@@ -1,13 +1,10 @@
 name: CodeQL security analysis
 
 # CodeQL scans Python source for injection paths, auth bypass, tainted data flows.
+# Results are uploaded to the GitHub Security tab (repo is public — no GHAS required).
 #
-# NOTE: SARIF upload requires GitHub Advanced Security (GHAS) or a public repo.
-# upload: false is set intentionally — results appear in the Actions log only.
-# Enable GHAS or make the repo public to get results in the Security tab.
-#
-# javascript-typescript is excluded until the frontend is scaffolded.
-# Re-add it (and restore it in the matrix) when frontend/ is created.
+# javascript-typescript excluded until frontend/ is scaffolded.
+# Re-add language + matrix entry when frontend is created.
 #
 # Not included in pr-gate.yml — informational only.
 
@@ -46,4 +43,4 @@ jobs:
         uses: github/codeql-action/analyze@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
         with:
           category: "/language:python"
-          upload: false  # SARIF upload requires GHAS — not available on this private repo
+          upload: true
