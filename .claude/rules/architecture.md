@@ -50,7 +50,7 @@ Agency clicks "Call" → POST /api/v1/calls
 ## Anthropic Model IDs (current as of 2026-04)
 - Orchestration/architecture: `claude-opus-4-6`
 - Evaluation + complex tasks: `claude-sonnet-4-6`
-- Quick scoring/classification: `claude-haiku-4-5`
+- Quick scoring/classification: `claude-haiku-4-5-20251001`
 
 ## Database (PostgreSQL 16)
 - JSONB columns for flexible data: `voice_config`, `question_scores`, `ats_metadata`

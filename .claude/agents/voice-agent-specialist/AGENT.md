@@ -110,10 +110,14 @@ Laws to comply with:
 - Each call queued independently with its own Call record
 - **Concurrent limit per agency: max 5 simultaneous calls** — enforced via Redis atomic counter:
   ```python
-  # Redis INCR/DECR with TTL — safe under concurrent workers
+  # INCR + EXPIRE sent in one pipeline — both succeed or neither does.
+  # DO NOT call incr() then expire() separately: a crash between them leaks
+  # the key permanently with no TTL.
   key = f"active_calls:{agency_id}"
-  count = await redis.incr(key)
-  await redis.expire(key, 3600)  # TTL guard against leaked counters
+  async with redis.pipeline() as pipe:
+      pipe.incr(key)
+      pipe.expire(key, 3600)
+      count, _ = await pipe.execute()
   if count > 5:
       await redis.decr(key)
       raise HTTPException(status_code=429, detail="Concurrent call limit reached")
@@ -134,7 +138,10 @@ Laws to comply with:
 - **Webhook signature**: Verify `x-retell-signature` header using HMAC-SHA256. Use `hmac.compare_digest` (timing-safe) — never `==`. Pattern:
   ```python
   import hmac, hashlib
-  expected = hmac.new(settings.retell_webhook_secret.encode(), body, hashlib.sha256).hexdigest()
+  # hmac.digest() is the one-shot API (Python 3.7+) — no ambiguity with constructors
+  expected = hmac.digest(
+      settings.retell_webhook_secret.encode(), body, hashlib.sha256
+  ).hex()
   if not hmac.compare_digest(expected, request.headers.get("x-retell-signature", "")):
       raise HTTPException(status_code=401, detail="Invalid webhook signature")
   ```

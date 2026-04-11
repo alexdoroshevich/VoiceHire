@@ -45,8 +45,9 @@ class ATSProviderFactory:
         try:
             credentials = json.loads(fernet.decrypt(connection.credentials))
         except InvalidToken as exc:
-            # Wrong key or corrupted ciphertext — surface as 503, never swallow
-            raise HTTPException(status_code=503, detail="ATS credential decryption failed") from exc
+            # Raise a domain exception — route handlers convert to HTTP 503.
+            # Never raise HTTPException from service/factory layer.
+            raise ATSDecryptionError("ATS credential decryption failed") from exc
         match connection.provider:
             case "bullhorn": return BullhornATSProvider(credentials)
             case "avionte": return AvionteATSProvider(credentials)
