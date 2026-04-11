@@ -1,5 +1,6 @@
 """Application configuration loaded from environment / .env file."""
 
+from cryptography.fernet import Fernet
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -64,13 +65,23 @@ class Settings(BaseSettings):
     rate_limit_auth_window_seconds: int = 60
 
     @model_validator(mode="after")
-    def validate_production_secret_key(self) -> "Settings":
-        """Reject the default secret_key in non-development environments."""
-        if self.app_env != "development" and self.secret_key == "changeme-in-production":
-            raise ValueError(
-                "SECRET_KEY must be set to a secure random value in non-development environments. "
-                'Generate one with: python -c "import secrets; print(secrets.token_hex(32))"'
-            )
+    def validate_production_settings(self) -> "Settings":
+        """Reject insecure defaults in non-development environments."""
+        if self.app_env != "development":
+            if self.secret_key == "changeme-in-production":
+                raise ValueError(
+                    "SECRET_KEY must be set to a secure random value in non-development environments. "
+                    'Generate one with: python -c "import secrets; print(secrets.token_hex(32))"'
+                )
+            if self.ats_encryption_key:
+                try:
+                    Fernet(self.ats_encryption_key.encode())
+                except Exception as exc:
+                    raise ValueError(
+                        "ATS_ENCRYPTION_KEY is not a valid Fernet key. "
+                        "Generate one with: "
+                        'python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"'
+                    ) from exc
         return self
 
 

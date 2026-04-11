@@ -50,7 +50,7 @@ jobs:
           import os, json, httpx
           import anthropic
 
-          diff = open("pr_diff.txt").read()[:40000]  # cap at ~40k chars
+          diff = open("pr_diff.txt").read()[:100000]  # cap at ~100k chars
 
           client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
@@ -75,7 +75,7 @@ jobs:
           APPROVE / REQUEST_CHANGES / COMMENT — one word + one sentence reason."""
 
           response = client.messages.create(
-              model="claude-sonnet-4-6",
+              model="claude-opus-4-6",
               max_tokens=2048,
               system=system,
               messages=[{

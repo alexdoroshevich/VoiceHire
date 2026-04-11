@@ -58,6 +58,7 @@ class ATSProviderFactory:
 
 - ATS credentials stored encrypted in `ats_connections.credentials` JSONB
 - Fernet encryption with dedicated `ATS_ENCRYPTION_KEY` env var — **separate from JWT `SECRET_KEY`**
+- `ATS_ENCRYPTION_KEY` must be a valid URL-safe base64-encoded 32-byte key. It is validated at startup in `config.py` via `model_validator` — if invalid, the app refuses to start. Generate with: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
 - Credentials decrypted only in-memory when creating ATSProvider instance
 - NEVER log ATS credentials, OAuth tokens, or API keys
 - Credentials include: API URL, client ID, client secret, OAuth tokens
@@ -83,4 +84,8 @@ class ATSProviderFactory:
 - **Bullhorn OAuth refresh**: Tokens expire frequently. Always refresh before API calls.
 - **Rate limiting**: ATS APIs have strict rate limits. Implement exponential backoff.
 - **Data mapping**: ATS field names vary. Use mapping dicts in each provider implementation.
-- **Fernet key rotation**: If `ATS_ENCRYPTION_KEY` changes, existing encrypted credentials become unreadable. Document this risk and provide a migration script before rotating.
+- **Fernet key rotation**: If `ATS_ENCRYPTION_KEY` changes, existing encrypted credentials become unreadable. Migration procedure before rotating:
+  1. Deploy with BOTH the old and new key (multi-key decryption support)
+  2. Run a migration job: decrypt all `ats_connections.credentials` with old key, re-encrypt with new key
+  3. Remove the old key from config
+  4. Script skeleton: `fernet_old.decrypt(row) → fernet_new.encrypt(plaintext) → update DB`

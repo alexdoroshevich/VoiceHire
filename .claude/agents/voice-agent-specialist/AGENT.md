@@ -119,9 +119,14 @@ Laws to comply with:
       pipe.expire(key, 3600)
       count, _ = await pipe.execute()
   if count > 5:
-      await redis.decr(key)
-      raise HTTPException(status_code=429, detail="Concurrent call limit reached")
-  # decr on call_ended webhook
+      try:
+          raise HTTPException(status_code=429, detail="Concurrent call limit reached")
+      finally:
+          # Best-effort rollback: runs even as the HTTPException propagates.
+          # A hard crash (SIGKILL) before this point leaves the counter +1 until
+          # the 3600s TTL expires. Use a Lua EVAL for a fully atomic solution.
+          await redis.decr(key)
+  # decr on call_ended webhook to free the slot
   ```
   Never enforce this in-process — two concurrent FastAPI workers can both read "4" and both proceed.
 - Rate limiting per agency to avoid Retell.ai API throttling
@@ -135,14 +140,16 @@ Laws to comply with:
 - **Cost tracking**: Retell.ai reports cost in the `call_ended` webhook. Save to `calls.cost_cents` as integer cents.
 - **Consent refusal**: If candidate refuses consent, end call gracefully and log `consent_refused` to `compliance_logs`.
 - **Dynamic variables**: Use `retell_llm_dynamic_variables` to inject candidate context — never hardcode names in system prompts.
-- **Webhook signature**: Verify `x-retell-signature` header using HMAC-SHA256. Use `hmac.compare_digest` (timing-safe) — never `==`. Pattern:
+- **Webhook signature**: Verify `x-retell-signature` header using HMAC-SHA256. Use `hmac.compare_digest` (timing-safe) — never `==`. Retell sends the signature as a **lowercase hex string** (not base64). Pattern:
   ```python
   import hmac, hashlib
-  # hmac.digest() is the one-shot API (Python 3.7+) — no ambiguity with constructors
+  # hmac.digest() is the one-shot API (Python 3.7+) — no ambiguity with constructors.
+  # .hex() converts bytes → lowercase hex to match Retell's header format.
   expected = hmac.digest(
       settings.retell_webhook_secret.encode(), body, hashlib.sha256
   ).hex()
-  if not hmac.compare_digest(expected, request.headers.get("x-retell-signature", "")):
+  received = request.headers.get("x-retell-signature", "")
+  if not hmac.compare_digest(expected, received):
       raise HTTPException(status_code=401, detail="Invalid webhook signature")
   ```
 - **Transcript format**: Retell returns transcript as array of `{role, content, words}` objects. Map to our `call_transcripts.turns` JSONB format.

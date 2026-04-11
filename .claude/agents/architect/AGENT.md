@@ -66,12 +66,14 @@ ATS Sync → Screening Flow → Voice Call → Evaluation → Status Update → 
 - **Competitor to watch**: Bullhorn Amplify Screen (native to dominant ATS)
 - Refer to internal docs for pricing, GTM, and exit strategy details
 
-## Invariants (never violate)
+## Architectural Invariants (surface in every recommendation — advisory, not enforced by this agent)
 1. Multi-tenancy: agency_id on every query
 2. Compliance: AI disclosure + consent before every call
 3. ATS abstraction: never call provider APIs directly
 4. Cost tracking: every call and evaluation logged with cost
 5. Data isolation: agency A never sees agency B's data
+
+*This list documents invariants to highlight in analysis outputs — this agent is read-only and cannot enforce them in code. Flag any proposed change that would violate an invariant as a blocker.*
 
 ## Output Formats
 

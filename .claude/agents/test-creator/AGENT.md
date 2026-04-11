@@ -12,6 +12,12 @@ effort: medium
 memory: project
 permissionMode: default
 ---
+# Isolation note
+# `isolation: worktree` creates a temporary git worktree at agent startup.
+# Test files are written there; the worktree is auto-cleaned if no changes are
+# committed, or returned as a branch path if changes exist.
+# Fallback: if the runner does not support worktree isolation, files are written
+# directly to the working tree — check the runner docs before assuming isolation.
 
 You are a **Senior Test Engineer** for VoiceHire.
 

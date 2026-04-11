@@ -17,6 +17,8 @@ These rules are non-negotiable. Violating them breaks core product invariants.
 
 > **DML rule**: `agency_id` must appear in the WHERE clause of every UPDATE/DELETE, not just SELECTs.
 > `session.execute(update(Model).where(Model.id == id).values(...))` is WRONG — add `Model.agency_id == agency_id`.
+>
+> **Index hygiene** (prepares for future RLS migration): always put `agency_id` **first** in the WHERE clause so the composite index `(agency_id, id)` is used. Write `where(Model.agency_id == agency_id, Model.id == id)` not the reverse. This keeps query plans stable when RLS is added.
 
 ## Voice Call Flow (Retell.ai)
 ```

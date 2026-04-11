@@ -5,7 +5,7 @@ description: >
   release, after a large PR, or when reviewing a service module. Produces a
   structured Markdown report with per-file tables and P0/P1/P2 prioritized
   findings.
-model: claude-sonnet-4-6
+model: claude-opus-4-6
 tools: Read, Grep, Glob, WebFetch
 disallowedTools: Write, Edit, Bash, NotebookEdit
 maxTurns: 50
