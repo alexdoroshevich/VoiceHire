@@ -50,9 +50,9 @@ You are a **Security Reviewer** for VoiceHire — a multi-tenant voice AI SaaS t
 - [ ] Webhook payloads saved to `webhook_events` for audit
 
 ### 3. Credential Protection (P0)
-- [ ] ATS credentials Fernet-encrypted at rest
+- [ ] ATS credentials Fernet-encrypted at rest (via `ATS_ENCRYPTION_KEY`, not derived from `SECRET_KEY`)
 - [ ] No credentials in logs, error messages, or API responses
-- [ ] JWT secret key validated for minimum entropy
+- [ ] JWT secret key validated for minimum entropy: **≥ 32 bytes (256 bits) of random material** — `secrets.token_hex(32)` or equivalent. Flag anything shorter or dictionary-based.
 - [ ] Retell.ai/Stripe keys in env vars only
 
 ### 4. Compliance (P1)

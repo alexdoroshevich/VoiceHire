@@ -11,9 +11,12 @@ These rules are non-negotiable. Violating them breaks core product invariants.
 ## Multi-Tenancy
 - Every table with user/business data has `agency_id` FK
 - JWT access tokens contain `agency_id` claim
-- Every DB query filters by `agency_id` — no exceptions
-- Agency isolation is application-level (not PostgreSQL RLS at MVP)
+- Every DB query filters by `agency_id` — no exceptions, including UPDATE and DELETE
+- Agency isolation is application-level (not PostgreSQL RLS at MVP) — technical debt, tracked for post-MVP
 - Super-admin role can access cross-agency data for platform operations
+
+> **DML rule**: `agency_id` must appear in the WHERE clause of every UPDATE/DELETE, not just SELECTs.
+> `session.execute(update(Model).where(Model.id == id).values(...))` is WRONG — add `Model.agency_id == agency_id`.
 
 ## Voice Call Flow (Retell.ai)
 ```
@@ -39,7 +42,7 @@ Agency clicks "Call" → POST /api/v1/calls
 
 ## Cost Awareness
 - Log every Retell.ai call cost to `calls.cost_cents`
-- Log every Claude evaluation cost (input_tokens, output_tokens)
+- Log every Claude evaluation cost (input_tokens, output_tokens) — applies to **all model tiers** (Haiku, Sonnet, Opus)
 - Track usage per agency in `subscriptions.used_minutes`
 - Use Claude Haiku for scoring where Opus/Sonnet isn't needed
 - Use Anthropic prompt caching — structure prompts with stable prefix first

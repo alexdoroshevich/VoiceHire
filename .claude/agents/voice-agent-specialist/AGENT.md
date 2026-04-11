@@ -108,7 +108,18 @@ Laws to comply with:
 
 - POST /api/v1/calls/batch initiates calls for a list of candidate IDs
 - Each call queued independently with its own Call record
-- Concurrent limit per agency (default 5 simultaneous calls)
+- **Concurrent limit per agency: max 5 simultaneous calls** — enforced via Redis atomic counter:
+  ```python
+  # Redis INCR/DECR with TTL — safe under concurrent workers
+  key = f"active_calls:{agency_id}"
+  count = await redis.incr(key)
+  await redis.expire(key, 3600)  # TTL guard against leaked counters
+  if count > 5:
+      await redis.decr(key)
+      raise HTTPException(status_code=429, detail="Concurrent call limit reached")
+  # decr on call_ended webhook
+  ```
+  Never enforce this in-process — two concurrent FastAPI workers can both read "4" and both proceed.
 - Rate limiting per agency to avoid Retell.ai API throttling
 - Retry: no_answer/busy → retry up to 2x with configurable delay
 - Voicemail detection: mark as `voicemail`, no retry
@@ -120,5 +131,11 @@ Laws to comply with:
 - **Cost tracking**: Retell.ai reports cost in the `call_ended` webhook. Save to `calls.cost_cents` as integer cents.
 - **Consent refusal**: If candidate refuses consent, end call gracefully and log `consent_refused` to `compliance_logs`.
 - **Dynamic variables**: Use `retell_llm_dynamic_variables` to inject candidate context — never hardcode names in system prompts.
-- **Webhook signature**: Verify `x-retell-signature` header using HMAC. Reject unverified payloads with 401.
+- **Webhook signature**: Verify `x-retell-signature` header using HMAC-SHA256. Use `hmac.compare_digest` (timing-safe) — never `==`. Pattern:
+  ```python
+  import hmac, hashlib
+  expected = hmac.new(settings.retell_webhook_secret.encode(), body, hashlib.sha256).hexdigest()
+  if not hmac.compare_digest(expected, request.headers.get("x-retell-signature", "")):
+      raise HTTPException(status_code=401, detail="Invalid webhook signature")
+  ```
 - **Transcript format**: Retell returns transcript as array of `{role, content, words}` objects. Map to our `call_transcripts.turns` JSONB format.

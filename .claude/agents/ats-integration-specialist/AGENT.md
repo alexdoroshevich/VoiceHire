@@ -36,10 +36,17 @@ class ATSProvider(ABC):
     async def push_screening_results(self, result: ATSScreeningResult) -> bool
 
 # services/ats/provider_factory.py
+from cryptography.fernet import Fernet, InvalidToken
+
 class ATSProviderFactory:
     @staticmethod
     def create(connection: ATSConnection) -> ATSProvider:
-        credentials = decrypt(connection.credentials)  # decrypt before passing
+        fernet = Fernet(settings.ats_encryption_key.encode())
+        try:
+            credentials = json.loads(fernet.decrypt(connection.credentials))
+        except InvalidToken as exc:
+            # Wrong key or corrupted ciphertext — surface as 503, never swallow
+            raise HTTPException(status_code=503, detail="ATS credential decryption failed") from exc
         match connection.provider:
             case "bullhorn": return BullhornATSProvider(credentials)
             case "avionte": return AvionteATSProvider(credentials)

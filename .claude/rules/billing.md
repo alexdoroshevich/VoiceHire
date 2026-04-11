@@ -53,4 +53,4 @@ paths:
 - Never log full card numbers or payment method details
 - Never skip webhook signature verification
 - Never block call completion due to billing — charge overage after
-- Never expose Stripe customer_id or subscription_id to frontend
+- Never expose Stripe `customer_id` or `subscription_id` to the frontend or include them in any Pydantic **response schema**. These are internal billing identifiers — omit from all `/api/v1/billing/*` response models. Passing them server-side to `stripe.billing_portal.Session.create()` is fine; including them in API responses is not.
