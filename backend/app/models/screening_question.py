@@ -14,7 +14,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.screening_flow import ScreeningFlow
+    from app.models.screening_flow import ScreeningFlow  # lgtm[py/cyclic-import]
 
 
 class QuestionType(enum.StrEnum):

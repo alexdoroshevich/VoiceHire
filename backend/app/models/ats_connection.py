@@ -13,7 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.agency import Agency
+    from app.models.agency import Agency  # lgtm[py/cyclic-import]
 
 
 class ATSProviderType(enum.StrEnum):

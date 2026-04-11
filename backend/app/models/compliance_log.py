@@ -14,8 +14,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.agency import Agency
-    from app.models.call import Call
+    from app.models.agency import Agency  # lgtm[py/cyclic-import]
+    from app.models.call import Call  # lgtm[py/cyclic-import]
 
 
 class ComplianceEventType(enum.StrEnum):

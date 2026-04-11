@@ -13,8 +13,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.call import Call
-    from app.models.candidate import Candidate
+    from app.models.call import Call  # lgtm[py/cyclic-import]
+    from app.models.candidate import Candidate  # lgtm[py/cyclic-import]
 
 
 class CandidateEvaluation(UUIDPrimaryKeyMixin, TimestampMixin, Base):

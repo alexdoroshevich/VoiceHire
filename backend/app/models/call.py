@@ -14,12 +14,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.agency import Agency
-    from app.models.call_transcript import CallTranscript
-    from app.models.candidate import Candidate
-    from app.models.candidate_evaluation import CandidateEvaluation
-    from app.models.compliance_log import ComplianceLog
-    from app.models.screening_flow import ScreeningFlow
+    from app.models.agency import Agency  # lgtm[py/cyclic-import]
+    from app.models.call_transcript import CallTranscript  # lgtm[py/cyclic-import]
+    from app.models.candidate import Candidate  # lgtm[py/cyclic-import]
+    from app.models.candidate_evaluation import CandidateEvaluation  # lgtm[py/cyclic-import]
+    from app.models.compliance_log import ComplianceLog  # lgtm[py/cyclic-import]
+    from app.models.screening_flow import ScreeningFlow  # lgtm[py/cyclic-import]
 
 
 class CallDirection(enum.StrEnum):

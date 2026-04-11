@@ -13,7 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.call import Call
+    from app.models.call import Call  # lgtm[py/cyclic-import]
 
 
 class CallTranscript(UUIDPrimaryKeyMixin, Base):
