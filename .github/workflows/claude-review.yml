@@ -1,0 +1,106 @@
+name: Claude Code Review
+
+# Automated PR review by Claude.
+# Triggers on every PR opened or updated against main.
+# Posts a structured review as a PR comment (inline annotations + summary).
+#
+# Required GitHub secret: ANTHROPIC_API_KEY
+# Set at: Settings → Secrets and variables → Actions → New repository secret
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  claude-review:
+    name: Claude code review
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git diff "${BASE_SHA}..${HEAD_SHA}" > pr_diff.txt
+          echo "diff_size=$(wc -c < pr_diff.txt)" >> $GITHUB_OUTPUT
+
+      - name: Claude review
+        if: steps.diff.outputs.diff_size != '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          pip install anthropic httpx --quiet
+
+          python - <<'PYEOF'
+          import os, json, httpx
+          import anthropic
+
+          diff = open("pr_diff.txt").read()[:100000]  # cap at ~100k chars
+
+          client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+
+          system = """You are a senior software engineer reviewing a pull request for VoiceHire,
+          a multi-tenant voice AI SaaS platform built with FastAPI + PostgreSQL.
+
+          Review guidelines:
+          - Security: check for multi-tenant data leaks (missing agency_id filters), auth bypass, secrets in code
+          - Correctness: logic errors, missing error handling, race conditions
+          - Code quality: type hints, structlog usage, conventional commit alignment
+          - Architecture: adherence to the provider pattern (ATS/voice), cost logging for AI calls
+          - Skip style nits already enforced by ruff/mypy
+
+          Format your review as:
+          ## Review summary
+          (2-3 sentence overall assessment)
+
+          ## Findings
+          For each finding: **[CRITICAL|HIGH|MEDIUM|LOW]** `file:line` — description
+
+          ## Verdict
+          APPROVE / REQUEST_CHANGES / COMMENT — one word + one sentence reason."""
+
+          response = client.messages.create(
+              model="claude-opus-4-6",
+              max_tokens=2048,
+              system=system,
+              messages=[{
+                  "role": "user",
+                  "content": f"PR diff to review:\n\n```diff\n{diff}\n```"
+              }]
+          )
+
+          review_body = response.content[0].text
+
+          # Post as a PR comment via GitHub API
+          token = os.environ["GITHUB_TOKEN"]
+          repo  = os.environ["REPO"]
+          pr    = os.environ["PR_NUMBER"]
+
+          httpx.post(
+              f"https://api.github.com/repos/{repo}/issues/{pr}/comments",
+              headers={
+                  "Authorization": f"Bearer {token}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+              },
+              json={"body": f"## Claude Code Review\n\n{review_body}"},
+              timeout=30,
+          ).raise_for_status()
+
+          print("Review posted successfully.")
+          PYEOF

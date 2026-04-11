@@ -1,0 +1,10 @@
+# Normalize all text files to LF in the repository
+# (Windows checkouts will convert to CRLF locally, commits always store LF)
+* text=auto eol=lf
+
+# Explicitly binary files
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary

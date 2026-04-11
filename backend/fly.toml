@@ -1,0 +1,37 @@
+app = "voicehire-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+  dockerfile_target = "production"
+
+[deploy]
+  release_command = "alembic upgrade head"
+
+[env]
+  APP_ENV = "production"
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 200
+    soft_limit = 150
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[[http_service.checks]]
+  interval = "10s"
+  timeout = "5s"
+  grace_period = "30s"
+  method = "GET"
+  path = "/health"
