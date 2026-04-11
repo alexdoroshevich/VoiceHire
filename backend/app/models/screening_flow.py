@@ -12,8 +12,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.agency import Agency  # lgtm[py/cyclic-import]
-    from app.models.screening_question import ScreeningQuestion  # lgtm[py/cyclic-import]
+    from app.models.agency import Agency  # lgtm[py/unsafe-cyclic-import]
+    from app.models.screening_question import ScreeningQuestion  # lgtm[py/unsafe-cyclic-import]
 
 
 class ScreeningFlow(UUIDPrimaryKeyMixin, TimestampMixin, Base):

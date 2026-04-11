@@ -36,11 +36,12 @@ jobs:
           queries: security-and-quality
           config: |
             query-filters:
-              # py/cyclic-import fires on TYPE_CHECKING-guarded imports in SQLAlchemy
-              # models (the correct Python pattern). This is a CodeQL false positive —
-              # these imports never execute at runtime (TYPE_CHECKING is always False).
+              # py/unsafe-cyclic-import fires on TYPE_CHECKING-guarded imports in
+              # SQLAlchemy models (the correct Python pattern). This is a CodeQL false
+              # positive — these imports never execute at runtime (TYPE_CHECKING is
+              # always False). Rule ID confirmed via GitHub code-scanning/analyses API.
               - exclude:
-                  id: py/cyclic-import
+                  id: py/unsafe-cyclic-import
             paths-ignore:
               - backend/.venv
               - backend/tests

@@ -11,13 +11,13 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from app.models.ats_connection import ATSConnection  # lgtm[py/cyclic-import]
-    from app.models.call import Call  # lgtm[py/cyclic-import]
-    from app.models.candidate import Candidate  # lgtm[py/cyclic-import]
-    from app.models.compliance_log import ComplianceLog  # lgtm[py/cyclic-import]
-    from app.models.screening_flow import ScreeningFlow  # lgtm[py/cyclic-import]
-    from app.models.subscription import Subscription  # lgtm[py/cyclic-import]
-    from app.models.user import User  # lgtm[py/cyclic-import]
+    from app.models.ats_connection import ATSConnection  # lgtm[py/unsafe-cyclic-import]
+    from app.models.call import Call  # lgtm[py/unsafe-cyclic-import]
+    from app.models.candidate import Candidate  # lgtm[py/unsafe-cyclic-import]
+    from app.models.compliance_log import ComplianceLog  # lgtm[py/unsafe-cyclic-import]
+    from app.models.screening_flow import ScreeningFlow  # lgtm[py/unsafe-cyclic-import]
+    from app.models.subscription import Subscription  # lgtm[py/unsafe-cyclic-import]
+    from app.models.user import User  # lgtm[py/unsafe-cyclic-import]
 
 
 class Agency(UUIDPrimaryKeyMixin, TimestampMixin, Base):
