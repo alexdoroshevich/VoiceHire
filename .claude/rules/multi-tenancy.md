@@ -32,6 +32,9 @@ result = await db.execute(
 )
 ```
 
+This filter applies to **all operations** — reads, updates, and deletes. Never perform a
+write (UPDATE/DELETE) without first confirming `agency_id` ownership via the SELECT above.
+
 ## Exceptions (tables without agency_id)
 - `webhook_events` — raw inbound events before routing to agency
 - Platform-level admin tables (if any)

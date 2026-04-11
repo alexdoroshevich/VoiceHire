@@ -39,6 +39,7 @@ class ATSProvider(ABC):
 class ATSProviderFactory:
     @staticmethod
     def create(connection: ATSConnection) -> ATSProvider:
+        credentials = decrypt(connection.credentials)  # decrypt before passing
         match connection.provider:
             case "bullhorn": return BullhornATSProvider(credentials)
             case "avionte": return AvionteATSProvider(credentials)
@@ -48,7 +49,7 @@ class ATSProviderFactory:
 ## Credential Security
 
 - ATS credentials stored encrypted in `ats_connections.credentials` JSONB
-- Fernet encryption with key derived from `SECRET_KEY`
+- Fernet encryption with dedicated `ATS_ENCRYPTION_KEY` env var — **separate from JWT `SECRET_KEY`**
 - Credentials decrypted only in-memory when creating ATSProvider instance
 - NEVER log ATS credentials, OAuth tokens, or API keys
 - Credentials include: API URL, client ID, client secret, OAuth tokens
@@ -74,4 +75,4 @@ class ATSProviderFactory:
 - **Bullhorn OAuth refresh**: Tokens expire frequently. Always refresh before API calls.
 - **Rate limiting**: ATS APIs have strict rate limits. Implement exponential backoff.
 - **Data mapping**: ATS field names vary. Use mapping dicts in each provider implementation.
-- **Fernet key rotation**: If SECRET_KEY changes, existing encrypted credentials become unreadable. Document this risk.
+- **Fernet key rotation**: If `ATS_ENCRYPTION_KEY` changes, existing encrypted credentials become unreadable. Document this risk and provide a migration script before rotating.

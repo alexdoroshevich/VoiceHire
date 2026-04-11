@@ -43,6 +43,7 @@ paths:
 - EVERY query on agency data MUST filter by `agency_id`
 - ID-based routes must verify tenant ownership: load resource, check `resource.agency_id == agency_id`
 - If not owner: raise `HTTPException(status_code=404)` (not 403 — don't leak existence)
+- This ownership check applies to ALL operations: GET, PUT, PATCH, DELETE — not just reads
 
 ## Router Setup
 Each router file follows this pattern:

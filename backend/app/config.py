@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     stripe_price_starter: str = ""
     stripe_price_pro: str = ""
 
+    # ── ATS Credential Encryption ─────────────────────────────────────────────
+    # Separate from SECRET_KEY — rotating one must not break the other.
+    ats_encryption_key: str = ""
+
     # ── Bullhorn ATS ──────────────────────────────────────────────────────────
     bullhorn_client_id: str = ""
     bullhorn_client_secret: str = ""

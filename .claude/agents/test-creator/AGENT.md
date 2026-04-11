@@ -26,8 +26,8 @@ If missing: STOP and ask.
 ### Framework & Tools
 - **Backend**: `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`)
 - **Frontend**: `vitest` + React Testing Library
-- **Run backend**: `cd backend && pytest -x -q`
-- **Run frontend**: `cd frontend && npm test`
+- **Run backend** (reference only — Bash is disallowed): `cd backend && pytest -x -q`
+- **Run frontend** (reference only — Bash is disallowed): `cd frontend && npm test`
 
 ### File Structure (mirror application path)
 ```
